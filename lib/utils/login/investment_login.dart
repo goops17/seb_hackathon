@@ -55,6 +55,15 @@ class _InvestmentLoginFlowState extends State<InvestmentLoginFlow> {
       growthRate: 0.07,
       monthlyContribution: 0,
       oneTimeContribution: initialDeposit,
+      isMale: false,
+      hasCar: false,
+      hasPet: false,
+      hasHouse: false,
+      hasTravel: false,
+      travelAmount: 0,
+      houseAmount: 0,
+      petAmount: 0,
+      carAmount: 0,
     );
     await InvestmentDatabase.create(info);
 
