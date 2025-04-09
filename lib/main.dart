@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:seb_hackaton/utils/charts.dart';
+import 'package:seb_hackaton/utils/circular_button.dart';
+import 'package:seb_hackaton/utils/settings.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,7 +31,7 @@ class InvestmentChartScreen extends StatefulWidget {
 }
 
 class _InvestmentChartScreenState extends State<InvestmentChartScreen> {
-  bool showChart = true;
+  bool showChart = false;
 
   void _toggleView() {
     setState(() {
@@ -50,16 +52,58 @@ class _InvestmentChartScreenState extends State<InvestmentChartScreen> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child:
-            showChart
-                ? const InvestmentChart()
-                : const Placeholder(
-                  fallbackHeight: 300,
-                  fallbackWidth: double.infinity,
-                  color: Colors.green,
+      body: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child:
+                  showChart
+                      ? const InvestmentChart()
+                      : const Center(
+                        child: Text(
+                          'Welcome to your financial dashboard!',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Color(0xFF006734),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                CircularIconButton(
+                  name: "Shop",
+                  assetImagePath: "lib/assets/icons/shop.png",
+                  onTap: () => print("Shop tapped"),
                 ),
+                CircularIconButton(
+                  name: "Settings",
+                  assetImagePath: "lib/assets/icons/settings.png",
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return InvestmentSetting();
+                      },
+                    );
+                  },
+                ),
+                CircularIconButton(
+                  name: "Simulation",
+                  assetImagePath: "lib/assets/icons/simulation.png",
+                  onTap: () => print("Simulation tapped"),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
