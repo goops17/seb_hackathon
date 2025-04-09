@@ -74,6 +74,52 @@ class _InvestmentChartScreenState extends State<InvestmentChartScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Investment Projection'),
+        leading: IconButton(
+          icon: const Icon(Icons.settings),
+          tooltip: 'Settings',
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Settings'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('👤 Name: ${widget.info.userName}'),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'You can delete all investment records below:',
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      child: const Text('Delete Records'),
+                      onPressed: () async {
+                        InvestmentDatabase.delete();
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('All investment records deleted'),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: Icon(showChart ? Icons.swap_horiz : Icons.show_chart),

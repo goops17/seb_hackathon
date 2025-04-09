@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:seb_hackaton/utils/charts.dart';
 import 'package:seb_hackaton/utils/circular_button.dart';
 import 'package:seb_hackaton/utils/settings.dart';
+import 'package:seb_hackaton/utils/simulation.dart';
 import 'package:seb_hackaton/utils/shop.dart';
 import 'package:seb_hackaton/utils/info/investment_info.dart';
 
@@ -37,12 +38,16 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
   void _updateVisuals() {
     final info = widget.investmentInfo;
     int level = getLevel(info.initialAmount);
+    int houseLevel = getLevel(info.houseAmount);
+    int petLevel = getLevel(info.petAmount);
+    int carLevel = getLevel(info.carAmount);
     String genderPath = info.isMale ? 'male' : 'female';
 
     avatarPath = 'lib/assets/avatar/$genderPath/$level.png';
-    backgroundPath = 'lib/assets/bg/$level.png'; // Background stays absolute
-    petPath = info.hasPet ? 'lib/assets/pet/$level.png' : '';
-    carPath = info.hasCar ? 'lib/assets/car/$level.png' : '';
+    backgroundPath =
+        info.hasHouse ? 'lib/assets/bg/$houseLevel.png' : 'lib/assets/bg/7.png';
+    petPath = info.hasPet ? 'lib/assets/pet/$petLevel.png' : '';
+    carPath = info.hasCar ? 'lib/assets/car/$carLevel.png' : '';
   }
 
   int getLevel(double amount) {
@@ -75,8 +80,8 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final avatarY = screenHeight * 0.67;
-    final avatarSize = screenHeight * 0.20;
+    final avatarY = screenHeight * 0.7;
+    final avatarSize = screenHeight * 0.25;
     final petCarSize = screenHeight * 0.10;
 
     return Stack(
@@ -107,7 +112,7 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
                       children: [
                         if (carPath.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.only(right: 0),
                             child: SizedBox(
                               height: petCarSize,
                               child: Image.asset(carPath, fit: BoxFit.contain),
@@ -119,7 +124,7 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
                         ),
                         if (petPath.isNotEmpty)
                           Padding(
-                            padding: const EdgeInsets.only(left: 12),
+                            padding: const EdgeInsets.only(left: 0),
                             child: SizedBox(
                               height: petCarSize,
                               child: Image.asset(petPath, fit: BoxFit.contain),
@@ -159,7 +164,14 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
                   CircularIconButton(
                     name: "Simulation",
                     assetImagePath: "lib/assets/icons/simulation.png",
-                    onTap: () => print("Simulation tapped"),
+                    onTap: () async {
+                      openSimulationDialog(context, widget.investmentInfo, (
+                        InvestmentInfo updatedInfo,
+                      ) async {
+                        await widget.investmentInfo.replace(updatedInfo);
+                        setState(() => _updateVisuals());
+                      });
+                    },
                   ),
                 ],
               ),

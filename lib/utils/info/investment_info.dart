@@ -76,6 +76,27 @@ class InvestmentInfo {
     );
   }
 
+  Future<void> replace(InvestmentInfo newInfo) async {
+    userName = newInfo.userName;
+    udid = newInfo.udid;
+    initialAmount = newInfo.initialAmount;
+    futurePredictedAmount = newInfo.futurePredictedAmount;
+    growthRate = newInfo.growthRate;
+    monthlyContribution = newInfo.monthlyContribution;
+    oneTimeContribution = newInfo.oneTimeContribution;
+    hasPet = newInfo.hasPet;
+    hasCar = newInfo.hasCar;
+    isMale = newInfo.isMale;
+    hasHouse = newInfo.hasHouse;
+    hasTravel = newInfo.hasTravel;
+    travelAmount = newInfo.travelAmount;
+    houseAmount = newInfo.houseAmount;
+    petAmount = newInfo.petAmount;
+    carAmount = newInfo.carAmount;
+
+    await InvestmentDatabase.update(this);
+  }
+
   Future<InvestmentInfo> update({
     String? userName,
     String? udid,

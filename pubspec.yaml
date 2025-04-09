@@ -39,6 +39,8 @@ dependencies:
   shared_preferences: ^2.5.3
   ulid: ^2.0.1
   uuid: ^4.5.1
+  lottie: ^3.3.1
+  confetti: ^0.8.0
 
 dev_dependencies:
   flutter_test:
@@ -65,7 +67,8 @@ flutter:
     - lib/assets/bg/
     - lib/assets/car/
     - lib/assets/pet/
-    - lib/assets/avatar/male
+    - lib/assets/lottie/
+    - lib/assets/avatar/male/
     - lib/assets/avatar/female/
 
   # An image asset can refer to one or more resolution-specific "variants", see

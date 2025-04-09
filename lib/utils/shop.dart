@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:seb_hackaton/utils/transaction_overlay.dart';
 import 'package:seb_hackaton/utils/info/investment_info.dart';
 
 class InvestmentShop extends StatefulWidget {
@@ -13,18 +13,21 @@ class InvestmentShop extends StatefulWidget {
 }
 
 class _InvestmentShopState extends State<InvestmentShop> {
-  void _buyItem(String item, double cost) async {
+  void _showTransactionOverlay(bool isBuying) {
+    final overlay = Overlay.of(context);
+    final entry = OverlayEntry(
+      builder: (_) => TransactionOverlay(isBuying: isBuying),
+    );
+    overlay.insert(entry);
+    Future.delayed(const Duration(seconds: 2), () {
+      entry.remove();
+    });
+  }
+
+  void _toggleItem(String item, double cost, bool isOwned) async {
     HapticFeedback.heavyImpact();
     double current = widget.investmentInfo.initialAmount;
 
-    if (current < cost) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Not enough funds to buy $item")));
-      return;
-    }
-
-    // Prepare updated values
     bool hasPet = widget.investmentInfo.hasPet;
     bool hasCar = widget.investmentInfo.hasCar;
     bool hasHouse = widget.investmentInfo.hasHouse;
@@ -35,21 +38,39 @@ class _InvestmentShopState extends State<InvestmentShop> {
     double travelAmount = widget.investmentInfo.travelAmount;
     double houseAmount = widget.investmentInfo.houseAmount;
 
+    double refund = 0;
+
     if (item == "Pet") {
-      hasPet = true;
-      petAmount += cost;
+      if (isOwned) refund = petAmount;
+      hasPet = !isOwned;
+      petAmount = isOwned ? 0 : cost;
     } else if (item == "Car") {
-      hasCar = true;
-      carAmount += cost;
+      if (isOwned) refund = carAmount;
+      hasCar = !isOwned;
+      carAmount = isOwned ? 0 : cost;
     } else if (item == "Travel") {
-      hasTravel = true;
-      travelAmount += cost;
+      if (isOwned) refund = travelAmount;
+      hasTravel = !isOwned;
+      travelAmount = isOwned ? 0 : cost;
     } else if (item == "House") {
-      hasHouse = true;
-      houseAmount += cost;
+      if (isOwned) refund = houseAmount;
+      hasHouse = !isOwned;
+      houseAmount = isOwned ? 0 : cost;
     }
 
+    if (!isOwned && current < cost) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Not enough funds to buy \$item")));
+      return;
+    }
+
+    _showTransactionOverlay(!isOwned);
+
+    double updatedAmount = isOwned ? current + refund : current - cost;
+
     await widget.investmentInfo.update(
+      initialAmount: updatedAmount,
       hasPet: hasPet,
       hasCar: hasCar,
       hasHouse: hasHouse,
@@ -63,12 +84,22 @@ class _InvestmentShopState extends State<InvestmentShop> {
     if (mounted) setState(() {});
 
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("You bought a $item! 🎉")));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isOwned ? "You sold your \$item." : "You bought a \$item! 🎉",
+        ),
+      ),
+    );
   }
 
   Widget _buildShopItem(String name, double cost, String iconPath) {
+    bool isOwned = false;
+    if (name == "Pet") isOwned = widget.investmentInfo.hasPet;
+    if (name == "Car") isOwned = widget.investmentInfo.hasCar;
+    if (name == "Travel") isOwned = widget.investmentInfo.hasTravel;
+    if (name == "House") isOwned = widget.investmentInfo.hasHouse;
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
       elevation: 4,
@@ -76,17 +107,17 @@ class _InvestmentShopState extends State<InvestmentShop> {
       child: ListTile(
         leading: Image.asset(iconPath, width: 40, height: 40),
         title: Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("Buy $name for \$$cost/m"),
+        subtitle: Text("${isOwned ? "Sell" : "Buy"} \$name for \\$cost"),
         trailing: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: isOwned ? Colors.red : Colors.deepPurple,
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
           ),
-          onPressed: () => _buyItem(name, cost),
-          child: const Text("Buy"),
+          onPressed: () => _toggleItem(name, cost, isOwned),
+          child: Text(isOwned ? "Sell" : "Buy"),
         ),
       ),
     );
