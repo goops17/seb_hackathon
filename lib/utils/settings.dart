@@ -1,10 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:seb_hackaton/utils/databse/investment_database.dart';
 import 'package:seb_hackaton/utils/info/investment_info.dart';
 
 class InvestmentSetting extends StatefulWidget {
+  final InvestmentInfo investmentInfo;
+
+  const InvestmentSetting({super.key, required this.investmentInfo});
+
   @override
   _InvestmentSettingState createState() => _InvestmentSettingState();
 }
@@ -12,61 +15,42 @@ class InvestmentSetting extends StatefulWidget {
 class _InvestmentSettingState extends State<InvestmentSetting> {
   bool saveChangeEnabled = false;
   String selectedPeriod = "None";
-  TextEditingController recurringAmountController = TextEditingController();
+  final TextEditingController recurringAmountController =
+      TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadInvestmentInfo();
+    _loadDataFromInfo();
   }
 
-  Future<void> _loadInvestmentInfo() async {
-    final info = await InvestmentDatabase.read();
-    if (info != null) {
-      setState(() {
-        saveChangeEnabled = info.monthlyContribution > 0;
-        selectedPeriod = info.monthlyContribution > 0 ? "Monthly" : "None";
-        recurringAmountController.text = info.monthlyContribution
-            .toStringAsFixed(0);
-      });
-    }
-  }
-
-  Future<void> _saveRecurringInvestment() async {
-    final info =
-        await InvestmentDatabase.read() ??
-        InvestmentInfo(
-          userId: "user",
-          udid: "device123",
-          initialAmount: 0,
-          futurePredictedAmount: 0,
-          growthRate: 0.07,
-          monthlyContribution: 0,
-          oneTimeContribution: 0,
-        );
-
-    double amount =
-        double.tryParse(recurringAmountController.text.trim()) ?? 0.0;
-
-    await info.update(
-      monthlyContribution: selectedPeriod == "None" ? 0.0 : amount,
+  void _loadDataFromInfo() {
+    final info = widget.investmentInfo;
+    saveChangeEnabled = info.monthlyContribution >= 50;
+    selectedPeriod = info.monthlyContribution > 0 ? "Monthly" : "None";
+    recurringAmountController.text = info.monthlyContribution.toStringAsFixed(
+      0,
     );
   }
 
-  Future<void> _saveOneTimeInvestment() async {
-    final info =
-        await InvestmentDatabase.read() ??
-        InvestmentInfo(
-          userId: "user",
-          udid: "device123",
-          initialAmount: 0,
-          futurePredictedAmount: 0,
-          growthRate: 0.07,
-          monthlyContribution: 0,
-          oneTimeContribution: 0,
-        );
+  Future<void> _saveRecurringInvestment() async {
+    double amount =
+        double.tryParse(recurringAmountController.text.trim()) ?? 0.0;
+    await widget.investmentInfo.update(
+      initialAmount: widget.investmentInfo.initialAmount + amount,
+    );
+    setState(() {});
+    print("InvestmentInfo: ${widget.investmentInfo.toJson().toString()}");
+  }
 
-    await info.update(oneTimeContribution: 500); // or get from user input
+  Future<void> _saveOneTimeInvestment() async {
+    double amount =
+        double.tryParse(recurringAmountController.text.trim()) ?? 0.0;
+    await widget.investmentInfo.update(
+      initialAmount: widget.investmentInfo.initialAmount + amount,
+    );
+    setState(() {});
+    print("InvestmentInfo: ${widget.investmentInfo.toJson().toString()}");
   }
 
   void _showWithdrawOptions(BuildContext context) {
@@ -77,26 +61,38 @@ class _InvestmentSettingState extends State<InvestmentSetting> {
             title: const Text("Withdraw Options"),
             actions: [
               CupertinoActionSheetAction(
-                onPressed: () {
+                onPressed: () async {
                   HapticFeedback.heavyImpact();
+                  double amount =
+                      double.tryParse(recurringAmountController.text.trim()) ??
+                      0.0;
+                  await widget.investmentInfo.update(
+                    initialAmount: widget.investmentInfo.initialAmount - amount,
+                  );
+                  setState(() {});
                   Navigator.pop(context);
-                  // Add logic if needed
+                  // Instant withdraw logic
                 },
                 child: const Text("Instant Withdraw (0.5 EUR charge)"),
               ),
               CupertinoActionSheetAction(
-                onPressed: () {
+                onPressed: () async {
                   HapticFeedback.heavyImpact();
+                  double amount =
+                      double.tryParse(recurringAmountController.text.trim()) ??
+                      0.0;
+                  await widget.investmentInfo.update(
+                    initialAmount: widget.investmentInfo.initialAmount - amount,
+                  );
+                  setState(() {});
                   Navigator.pop(context);
-                  // Add logic if needed
+                  // Slow withdraw logic
                 },
                 child: const Text("Slow Withdraw (takes 1 week)"),
               ),
             ],
             cancelButton: CupertinoActionSheetAction(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               child: const Text("Cancel"),
             ),
           ),
@@ -122,7 +118,6 @@ class _InvestmentSettingState extends State<InvestmentSetting> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Save the Change
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -163,19 +158,7 @@ class _InvestmentSettingState extends State<InvestmentSetting> {
                     onChanged: (value) async {
                       HapticFeedback.heavyImpact();
                       setState(() => saveChangeEnabled = value);
-
-                      final info =
-                          await InvestmentDatabase.read() ??
-                          InvestmentInfo(
-                            userId: "user",
-                            udid: "device123",
-                            initialAmount: 0,
-                            futurePredictedAmount: 0,
-                            growthRate: 0.07,
-                            monthlyContribution: 0,
-                            oneTimeContribution: 0,
-                          );
-                      await info.update(
+                      await widget.investmentInfo.update(
                         monthlyContribution: value ? 50.0 : 0.0,
                       );
                     },
@@ -185,8 +168,6 @@ class _InvestmentSettingState extends State<InvestmentSetting> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Recurring Investment
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -287,16 +268,12 @@ class _InvestmentSettingState extends State<InvestmentSetting> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // One-Time Investment Button
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 gradient: const LinearGradient(
                   colors: [Colors.deepPurple, Colors.purple],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
                 ),
               ),
               child: ElevatedButton(
@@ -327,16 +304,12 @@ class _InvestmentSettingState extends State<InvestmentSetting> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Withdraw Button
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 gradient: const LinearGradient(
                   colors: [Colors.red, Colors.orange],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
                 ),
               ),
               child: ElevatedButton(

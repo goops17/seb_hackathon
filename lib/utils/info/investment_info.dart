@@ -1,7 +1,7 @@
 import 'package:seb_hackaton/utils/databse/investment_database.dart';
 
 class InvestmentInfo {
-  String userId;
+  String userName;
   String udid;
   double initialAmount;
   double futurePredictedAmount;
@@ -10,7 +10,7 @@ class InvestmentInfo {
   double oneTimeContribution;
 
   InvestmentInfo({
-    required this.userId,
+    required this.userName,
     required this.udid,
     required this.initialAmount,
     required this.futurePredictedAmount,
@@ -28,7 +28,7 @@ class InvestmentInfo {
     double? monthlyContribution,
     double? oneTimeContribution,
   }) async {
-    this.userId = userId ?? this.userId;
+    this.userName = userId ?? this.userName;
     this.udid = udid ?? this.udid;
     this.initialAmount = initialAmount ?? this.initialAmount;
     this.futurePredictedAmount =
@@ -40,7 +40,7 @@ class InvestmentInfo {
   }
 
   Map<String, dynamic> toJson() => {
-    'userId': userId,
+    'userId': userName,
     'udid': udid,
     'initialAmount': initialAmount,
     'futurePredictedAmount': futurePredictedAmount,
@@ -51,8 +51,8 @@ class InvestmentInfo {
 
   factory InvestmentInfo.fromJson(Map<String, dynamic> json) {
     return InvestmentInfo(
-      userId: json['userId'],
-      udid: json['udid'],
+      userName: (json['userName'] ?? '') as String,
+      udid: (json['udid'] ?? '') as String,
       initialAmount: (json['initialAmount'] ?? 0).toDouble(),
       futurePredictedAmount: (json['futurePredictedAmount'] ?? 0).toDouble(),
       growthRate: (json['growthRate'] ?? 0).toDouble(),

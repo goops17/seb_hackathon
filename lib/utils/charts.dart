@@ -1,32 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
-
+import 'package:seb_hackaton/utils/info/investment_info.dart';
 import 'dart:math';
 
-class InvestmentChart extends StatelessWidget {
-  final double initialInvestment = 10000;
-  final double monthlyContribution = 300;
-  final double annualRate = 0.07;
-  final int years = 30;
+class InvestmentChart extends StatefulWidget {
+  final InvestmentInfo investmentInfo;
+  final int years;
 
-  const InvestmentChart({super.key});
+  const InvestmentChart({
+    super.key,
+    required this.investmentInfo,
+    this.years = 30,
+  });
 
+  @override
+  State<InvestmentChart> createState() => _InvestmentChartState();
+}
+
+class _InvestmentChartState extends State<InvestmentChart> {
   List<FlSpot> _calculateOneTimeInvestment() {
-    return List.generate(years + 1, (year) {
-      double value = initialInvestment * pow(1 + annualRate, year);
+    return List.generate(widget.years + 1, (year) {
+      double value =
+          widget.investmentInfo.initialAmount *
+          pow(1 + widget.investmentInfo.growthRate, year);
       return FlSpot(year.toDouble(), value / 1000); // in K
     });
   }
 
   List<FlSpot> _calculateMonthlyContributions() {
-    return List.generate(years + 1, (year) {
+    return List.generate(widget.years + 1, (year) {
       double futureValue = 0;
       for (int m = 1; m <= year * 12; m++) {
         futureValue +=
-            monthlyContribution * pow(1 + annualRate / 12, (year * 12) - m + 1);
+            widget.investmentInfo.monthlyContribution *
+            pow(1 + widget.investmentInfo.growthRate / 12, (year * 12) - m + 1);
       }
-      futureValue += initialInvestment * pow(1 + annualRate, year);
+      futureValue +=
+          widget.investmentInfo.initialAmount *
+          pow(1 + widget.investmentInfo.growthRate, year);
       return FlSpot(year.toDouble(), futureValue / 1000); // in K
     });
   }
@@ -41,6 +53,8 @@ class InvestmentChart extends StatelessWidget {
 
     final double endValueOneTime = oneTime.last.y * 1000;
     final double endValueMonthly = monthly.last.y * 1000;
+    final double maxChartY =
+        [...oneTime, ...monthly].map((e) => e.y).reduce(max) * 1.1;
 
     return Center(
       child: ConstrainedBox(
@@ -69,11 +83,16 @@ class InvestmentChart extends StatelessWidget {
                   spacing: 12,
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
-                  children: const [
+                  children: [
                     Icon(Icons.savings, color: Color(0xFF006734), size: 20),
-                    Text("Initial Investment"),
+                    Text(
+                      "Initial Investment: \$${widget.investmentInfo.initialAmount.toStringAsFixed(2)}",
+                    ),
+                    SizedBox(height: 20),
                     Icon(Icons.trending_up, color: Color(0xFF006734), size: 20),
-                    Text("Projected Return (30Y)"),
+                    Text(
+                      "Monthly Contribution: \$${widget.investmentInfo.monthlyContribution.toStringAsFixed(2)}",
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -81,6 +100,8 @@ class InvestmentChart extends StatelessWidget {
                   aspectRatio: 1.7,
                   child: LineChart(
                     LineChartData(
+                      maxY: maxChartY,
+                      minY: 0,
                       lineTouchData: LineTouchData(
                         handleBuiltInTouches: true,
                         touchTooltipData: LineTouchTooltipData(
@@ -103,8 +124,6 @@ class InvestmentChart extends StatelessWidget {
                       gridData: FlGridData(
                         show: true,
                         drawVerticalLine: true,
-                        horizontalInterval: 100,
-                        verticalInterval: 5,
                         getDrawingHorizontalLine:
                             (value) => FlLine(
                               color: Colors.grey.shade300,
@@ -134,7 +153,7 @@ class InvestmentChart extends StatelessWidget {
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
-                            interval: 500,
+                            interval: maxChartY / 5,
                             getTitlesWidget: (value, _) {
                               final formatted = NumberFormat.compact(
                                 locale: 'en_US',
@@ -147,7 +166,6 @@ class InvestmentChart extends StatelessWidget {
                             reservedSize: 48,
                           ),
                         ),
-
                         rightTitles: AxisTitles(
                           sideTitles: SideTitles(showTitles: false),
                         ),
@@ -157,8 +175,7 @@ class InvestmentChart extends StatelessWidget {
                       ),
                       borderData: FlBorderData(show: false),
                       minX: 0,
-                      maxX: years.toDouble(),
-                      minY: 0,
+                      maxX: widget.years.toDouble(),
                       lineBarsData: [
                         LineChartBarData(
                           spots: oneTime,
