@@ -18,7 +18,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool isLoading = true;
   bool hasProfile = false;
-  InvestmentInfo? info;
+  ValueNotifier<InvestmentInfo>? infoNotifier;
 
   @override
   void initState() {
@@ -27,10 +27,11 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> _checkProfile() async {
-    info = await InvestmentDatabase.read();
+    final info = await InvestmentDatabase.read();
     setState(() {
       hasProfile = info != null;
       isLoading = false;
+      if (info != null) infoNotifier = ValueNotifier(info);
     });
   }
 
@@ -46,15 +47,15 @@ class _MyAppState extends State<MyApp> {
           isLoading
               ? const Scaffold(body: Center(child: CircularProgressIndicator()))
               : hasProfile
-              ? InvestmentChartScreen(info: info!)
+              ? InvestmentChartScreen(infoNotifier: infoNotifier!)
               : const InvestmentLoginFlow(),
     );
   }
 }
 
 class InvestmentChartScreen extends StatefulWidget {
-  final InvestmentInfo info;
-  const InvestmentChartScreen({super.key, required this.info});
+  final ValueNotifier<InvestmentInfo> infoNotifier;
+  const InvestmentChartScreen({super.key, required this.infoNotifier});
 
   @override
   State<InvestmentChartScreen> createState() => _InvestmentChartScreenState();
@@ -69,6 +70,70 @@ class _InvestmentChartScreenState extends State<InvestmentChartScreen> {
     });
   }
 
+  Future<void> _openSettingsDialog() async {
+    final info = widget.infoNotifier.value;
+    String genderValue = info.isMale ? 'Male' : 'Female';
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setInnerState) {
+            return AlertDialog(
+              title: const Text('Settings'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('👤 Name: ${info.userName}'),
+                  const SizedBox(height: 16),
+                  const Text('Gender:'),
+                  const SizedBox(height: 4),
+                  DropdownButton<String>(
+                    value: genderValue,
+                    items:
+                        ['Male', 'Female']
+                            .map(
+                              (gender) => DropdownMenuItem(
+                                value: gender,
+                                child: Text(gender),
+                              ),
+                            )
+                            .toList(),
+                    onChanged: (value) async {
+                      setInnerState(() => genderValue = value!);
+                      await info.update(isMale: value == "Male");
+                      widget.infoNotifier.value = info.copyWith();
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: const Text('Delete Records'),
+                  onPressed: () async {
+                    await InvestmentDatabase.delete();
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('All investment records deleted'),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,61 +142,34 @@ class _InvestmentChartScreenState extends State<InvestmentChartScreen> {
         leading: IconButton(
           icon: const Icon(Icons.settings),
           tooltip: 'Settings',
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Settings'),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('👤 Name: ${widget.info.userName}'),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'You can delete all investment records below:',
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                      child: const Text('Cancel'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                    TextButton(
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
-                      child: const Text('Delete Records'),
-                      onPressed: () async {
-                        InvestmentDatabase.delete();
-                        Navigator.of(context).pop();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('All investment records deleted'),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-            );
-          },
+          onPressed: _openSettingsDialog,
         ),
         actions: [
-          IconButton(
-            icon: Icon(showChart ? Icons.swap_horiz : Icons.show_chart),
-            tooltip: 'Toggle View',
-            onPressed: _toggleView,
+          Row(
+            children: [
+              Switch(
+                value: showChart,
+                activeColor: Colors.green,
+                activeTrackColor: Colors.greenAccent,
+                onChanged: (value) {
+                  setState(() {
+                    showChart = value;
+                  });
+                },
+              ),
+            ],
           ),
         ],
       ),
-      body: InvestmentDashboard(
-        investmentInfo: widget.info,
-        showChart: showChart,
-        onToggleChart: _toggleView,
+      body: ValueListenableBuilder<InvestmentInfo>(
+        valueListenable: widget.infoNotifier,
+        builder: (context, info, _) {
+          return InvestmentDashboard(
+            investmentInfo: info,
+            showChart: showChart,
+            onToggleChart: _toggleView,
+          );
+        },
       ),
     );
   }

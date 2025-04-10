@@ -35,6 +35,14 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
     _updateVisuals();
   }
 
+  @override
+  void didUpdateWidget(covariant InvestmentDashboard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.investmentInfo != oldWidget.investmentInfo) {
+      _updateVisuals();
+    }
+  }
+
   void _updateVisuals() {
     final info = widget.investmentInfo;
     int level = getLevel(info.initialAmount);
@@ -48,6 +56,7 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
         info.hasHouse ? 'lib/assets/bg/$houseLevel.png' : 'lib/assets/bg/7.png';
     petPath = info.hasPet ? 'lib/assets/pet/$petLevel.png' : '';
     carPath = info.hasCar ? 'lib/assets/car/$carLevel.png' : '';
+    setState(() {}); // Refresh UI
   }
 
   int getLevel(double amount) {
@@ -64,17 +73,15 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
       context: context,
       builder: (_) => InvestmentSetting(investmentInfo: widget.investmentInfo),
     );
-    setState(() => _updateVisuals());
+    _updateVisuals();
   }
 
   void _openShopDialog() async {
-    print("shop button clicked");
     await showDialog(
       context: context,
       builder: (_) => InvestmentShop(investmentInfo: widget.investmentInfo),
     );
-
-    setState(() => _updateVisuals());
+    _updateVisuals();
   }
 
   @override
@@ -169,7 +176,7 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
                         InvestmentInfo updatedInfo,
                       ) async {
                         await widget.investmentInfo.replace(updatedInfo);
-                        setState(() => _updateVisuals());
+                        _updateVisuals();
                       });
                     },
                   ),

@@ -87,7 +87,7 @@ class _InvestmentShopState extends State<InvestmentShop> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isOwned ? "You sold your \$item." : "You bought a \$item! 🎉",
+          isOwned ? "You sold your $item." : "You bought a $item! 🎉",
         ),
       ),
     );

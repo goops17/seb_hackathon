@@ -43,6 +43,32 @@ class _InvestmentChartState extends State<InvestmentChart> {
     });
   }
 
+  int _getLevel(double amount) {
+    if (amount >= 50000) return 1;
+    if (amount >= 30000) return 2;
+    if (amount >= 20000) return 3;
+    if (amount >= 10000) return 4;
+    if (amount >= 5000) return 5;
+    return 6;
+  }
+
+  Color _getLevelColor(int level) {
+    switch (level) {
+      case 1:
+        return Colors.green.shade800;
+      case 2:
+        return Colors.green;
+      case 3:
+        return Colors.orange.shade700;
+      case 4:
+        return Colors.orange;
+      case 5:
+        return Colors.deepOrange;
+      default:
+        return Colors.redAccent;
+    }
+  }
+
   String _formatCurrency(double amount) =>
       "\$${(amount / 1000).toStringAsFixed(0)}K";
 
@@ -56,6 +82,22 @@ class _InvestmentChartState extends State<InvestmentChart> {
     final double maxChartY =
         [...oneTime, ...monthly].map((e) => e.y).reduce(max) * 1.1;
 
+    final initial = widget.investmentInfo.initialAmount;
+    final monthlyContribution = widget.investmentInfo.monthlyContribution;
+
+    if (initial == 0 && monthlyContribution == 0) {
+      return const Center(
+        child: Text(
+          "You don’t have any assets to project yet.",
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
+    final totalAmount = initial + monthlyContribution * 12;
+    final level = _getLevel(totalAmount);
+    final levelColor = _getLevelColor(level);
+    final levelBackground = Colors.grey.shade100;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 380),
@@ -64,18 +106,18 @@ class _InvestmentChartState extends State<InvestmentChart> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          color: const Color(0xFFF7FDF7), // Light SEB background
+          color: levelBackground,
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "Investment Projection",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF006734), // SEB green
+                    color: levelColor,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -84,14 +126,16 @@ class _InvestmentChartState extends State<InvestmentChart> {
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Icon(Icons.savings, color: Color(0xFF006734), size: 20),
+                    Icon(Icons.savings, color: levelColor, size: 20),
                     Text(
-                      "Initial Investment: \$${widget.investmentInfo.initialAmount.toStringAsFixed(2)}",
+                      "Initial Investment: \$${initial.toStringAsFixed(2)}",
+                      style: TextStyle(color: levelColor),
                     ),
-                    SizedBox(height: 20),
-                    Icon(Icons.trending_up, color: Color(0xFF006734), size: 20),
+                    const SizedBox(height: 20),
+                    Icon(Icons.trending_up, color: levelColor, size: 20),
                     Text(
-                      "Monthly Contribution: \$${widget.investmentInfo.monthlyContribution.toStringAsFixed(2)}",
+                      "Monthly Contribution: \$${monthlyContribution.toStringAsFixed(2)}",
+                      style: TextStyle(color: levelColor),
                     ),
                   ],
                 ),
@@ -112,9 +156,9 @@ class _InvestmentChartState extends State<InvestmentChart> {
                               final value = spot.y.toStringAsFixed(1);
                               return LineTooltipItem(
                                 "${spot.barIndex == 0 ? "One-time" : "Monthly"}: \$${value}K",
-                                const TextStyle(
+                                TextStyle(
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF006734),
+                                  color: levelColor,
                                 ),
                               );
                             }).toList();
@@ -180,35 +224,24 @@ class _InvestmentChartState extends State<InvestmentChart> {
                         LineChartBarData(
                           spots: oneTime,
                           isCurved: true,
-                          color: const Color(0xFF88C891),
+                          color: levelColor.withOpacity(0.8),
                           barWidth: 4,
                           isStrokeCapRound: true,
                           belowBarData: BarAreaData(
                             show: true,
-                            color: const Color(0xFF88C891).withOpacity(0.2),
+                            color: levelColor.withOpacity(0.2),
                           ),
                           dotData: FlDotData(show: false),
                         ),
                         LineChartBarData(
                           spots: monthly,
                           isCurved: true,
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF006734), Color(0xFF88C891)],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
+                          color: levelColor,
                           barWidth: 4,
                           isStrokeCapRound: true,
                           belowBarData: BarAreaData(
                             show: true,
-                            gradient: LinearGradient(
-                              colors: [
-                                const Color(0xFF006734).withOpacity(0.3),
-                                const Color(0xFF88C891).withOpacity(0.1),
-                              ],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                            ),
+                            color: levelColor.withOpacity(0.15),
                           ),
                           dotData: FlDotData(show: false),
                         ),
@@ -221,27 +254,17 @@ class _InvestmentChartState extends State<InvestmentChart> {
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.start,
-                  children: const [
-                    LegendItem(
-                      color: Color(0xFF88C891),
-                      label: "One-Time Contributions",
-                    ),
-                    SizedBox(width: 16),
-                    LegendItem(
-                      gradient: LinearGradient(
-                        colors: [Color(0xFF006734), Color(0xFF88C891)],
-                      ),
-                      label: "Monthly Contributions",
-                    ),
+                  children: [
+                    LegendItem(color: levelColor, label: "One-Time & Monthly"),
                   ],
                 ),
                 const SizedBox(height: 20),
                 Text(
                   "30Y One-Time: ${_formatCurrency(endValueOneTime)} | With Contributions: ${_formatCurrency(endValueMonthly)}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
-                    color: Color(0xFF006734),
+                    color: levelColor,
                   ),
                 ),
                 const SizedBox(height: 14),
