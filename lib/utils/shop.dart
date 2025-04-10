@@ -43,19 +43,19 @@ class _InvestmentShopState extends State<InvestmentShop> {
     if (item == "Pet") {
       if (isOwned) refund = petAmount;
       hasPet = !isOwned;
-      petAmount = isOwned ? 0 : cost;
+      petAmount = 20000;
     } else if (item == "Car") {
       if (isOwned) refund = carAmount;
       hasCar = !isOwned;
-      carAmount = isOwned ? 0 : cost;
+      carAmount = 20000;
     } else if (item == "Travel") {
       if (isOwned) refund = travelAmount;
       hasTravel = !isOwned;
-      travelAmount = isOwned ? 0 : cost;
+      travelAmount = 20000;
     } else if (item == "House") {
       if (isOwned) refund = houseAmount;
       hasHouse = !isOwned;
-      houseAmount = isOwned ? 0 : cost;
+      houseAmount = 20000;
     }
 
     if (!isOwned && current < cost) {
@@ -67,10 +67,7 @@ class _InvestmentShopState extends State<InvestmentShop> {
 
     _showTransactionOverlay(!isOwned);
 
-    double updatedAmount = isOwned ? current + refund : current - cost;
-
     await widget.investmentInfo.update(
-      initialAmount: updatedAmount,
       hasPet: hasPet,
       hasCar: hasCar,
       hasHouse: hasHouse,
@@ -107,7 +104,7 @@ class _InvestmentShopState extends State<InvestmentShop> {
       child: ListTile(
         leading: Image.asset(iconPath, width: 40, height: 40),
         title: Text(name, style: TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("${isOwned ? "Sell" : "Buy"} \$name for \\$cost"),
+        subtitle: Text("${isOwned ? "Sell" : "Buy"} $name for €$cost/month"),
         trailing: ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: isOwned ? Colors.red : Colors.deepPurple,
@@ -148,7 +145,7 @@ class _InvestmentShopState extends State<InvestmentShop> {
             _buildShopItem("Car", 100, 'lib/assets/icons/car.png'),
             const SizedBox(height: 12),
             Text(
-              "Disclaimer: These are future lifestyle goals represented as investment targets (not physical goods).",
+              "Disclaimer: These are future lifestyle goals represented as investment targets (not physical goods).\n\nThere will be a 0.8% brokerage fee on each purchase.",
               style: TextStyle(fontSize: 12, color: Colors.red[700]),
               textAlign: TextAlign.center,
             ),

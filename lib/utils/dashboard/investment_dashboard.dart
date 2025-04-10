@@ -5,6 +5,7 @@ import 'package:seb_hackaton/utils/circular_button.dart';
 import 'package:seb_hackaton/utils/settings.dart';
 import 'package:seb_hackaton/utils/simulation.dart';
 import 'package:seb_hackaton/utils/shop.dart';
+import 'package:seb_hackaton/utils/share.dart';
 import 'package:seb_hackaton/utils/info/investment_info.dart';
 
 class InvestmentDashboard extends StatefulWidget {
@@ -28,6 +29,7 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
   late String backgroundPath;
   late String petPath;
   late String carPath;
+  late String travelPath;
 
   @override
   void initState() {
@@ -49,6 +51,7 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
     int houseLevel = getLevel(info.houseAmount);
     int petLevel = getLevel(info.petAmount);
     int carLevel = getLevel(info.carAmount);
+    int travelLevel = getLevel(info.travelAmount);
     String genderPath = info.isMale ? 'male' : 'female';
 
     avatarPath = 'lib/assets/avatar/$genderPath/$level.png';
@@ -56,6 +59,8 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
         info.hasHouse ? 'lib/assets/bg/$houseLevel.png' : 'lib/assets/bg/7.png';
     petPath = info.hasPet ? 'lib/assets/pet/$petLevel.png' : '';
     carPath = info.hasCar ? 'lib/assets/car/$carLevel.png' : '';
+    travelPath = info.hasTravel ? 'lib/assets/travel/$travelLevel.png' : '';
+
     setState(() {}); // Refresh UI
   }
 
@@ -73,6 +78,11 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
       context: context,
       builder: (_) => InvestmentSetting(investmentInfo: widget.investmentInfo),
     );
+    _updateVisuals();
+  }
+
+  void _openShareDialog() async {
+    await showDialog(context: context, builder: (_) => InvestmentShare());
     _updateVisuals();
   }
 
@@ -109,6 +119,19 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
             Expanded(
               child: Stack(
                 children: [
+                  if (travelPath.isNotEmpty)
+                    Positioned(
+                      top: avatarY - (avatarSize + petCarSize * 2),
+                      left: 0,
+                      right: 0,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 0),
+                        child: SizedBox(
+                          height: petCarSize * 2,
+                          child: Image.asset(travelPath, fit: BoxFit.contain),
+                        ),
+                      ),
+                    ),
                   Positioned(
                     top: avatarY - avatarSize,
                     left: 0,
@@ -163,10 +186,16 @@ class _InvestmentDashboardState extends State<InvestmentDashboard> {
                     assetImagePath: "lib/assets/icons/shop.png",
                     onTap: _openShopDialog,
                   ),
+
                   CircularIconButton(
                     name: "Settings",
                     assetImagePath: "lib/assets/icons/settings.png",
                     onTap: _openSettingsDialog,
+                  ),
+                  CircularIconButton(
+                    name: "Share",
+                    assetImagePath: "lib/assets/icons/share.png",
+                    onTap: _openShareDialog,
                   ),
                   CircularIconButton(
                     name: "Simulation",

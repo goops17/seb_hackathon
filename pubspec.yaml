@@ -68,6 +68,7 @@ flutter:
     - lib/assets/car/
     - lib/assets/pet/
     - lib/assets/lottie/
+    - lib/assets/travel/
     - lib/assets/avatar/male/
     - lib/assets/avatar/female/
 

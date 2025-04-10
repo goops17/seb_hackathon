@@ -89,14 +89,8 @@ class _CircularIconButtonState extends State<CircularIconButton>
           widget.name,
           style: const TextStyle(
             fontSize: 12,
-            fontWeight: FontWeight.w500,
-            shadows: [
-              Shadow(
-                offset: Offset(0.5, 0.5),
-                color: Colors.black12,
-                blurRadius: 1,
-              ),
-            ],
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
       ],

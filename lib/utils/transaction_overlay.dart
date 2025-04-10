@@ -13,9 +13,6 @@ class TransactionOverlay extends StatefulWidget {
 
 class _TransactionOverlayState extends State<TransactionOverlay>
     with TickerProviderStateMixin {
-  final ConfettiController _confettiController = ConfettiController(
-    duration: const Duration(seconds: 2),
-  );
   bool _showConfetti = false;
   bool _showLottie = true;
   late final AnimationController _animationController;
@@ -31,7 +28,6 @@ class _TransactionOverlayState extends State<TransactionOverlay>
           _showLottie = false;
           _showConfetti = true;
         });
-        _confettiController.play();
       }
     });
   }
@@ -39,7 +35,6 @@ class _TransactionOverlayState extends State<TransactionOverlay>
   @override
   void dispose() {
     _animationController.dispose();
-    _confettiController.dispose();
     super.dispose();
   }
 
@@ -80,27 +75,78 @@ class _TransactionOverlayState extends State<TransactionOverlay>
               ],
             ),
           if (_showConfetti)
-            Positioned.fill(
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                maxBlastForce: 30,
-                minBlastForce: 10,
-                emissionFrequency: 0.02,
-                numberOfParticles: 80,
-                gravity: 0.3,
-                shouldLoop: false,
-                colors: const [
-                  Colors.greenAccent,
-                  Colors.blueAccent,
-                  Colors.orangeAccent,
-                  Colors.purpleAccent,
-                  Colors.yellow,
-                ],
+            Center(
+              child: CelebrationConfetti(
+                text: widget.isBuying ? "Funds Received!" : "Funds Returned!",
+                duration: const Duration(seconds: 2),
               ),
             ),
         ],
       ),
+    );
+  }
+}
+
+class CelebrationConfetti extends StatefulWidget {
+  final String text;
+  final Duration duration;
+  const CelebrationConfetti({
+    super.key,
+    required this.text,
+    required this.duration,
+  });
+
+  @override
+  State<CelebrationConfetti> createState() => _CelebrationConfettiState();
+}
+
+class _CelebrationConfettiState extends State<CelebrationConfetti> {
+  late final ConfettiController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = ConfettiController(duration: widget.duration);
+    _controller.play();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        ConfettiWidget(
+          confettiController: _controller,
+          blastDirectionality: BlastDirectionality.explosive,
+          maxBlastForce: 30,
+          minBlastForce: 10,
+          emissionFrequency: 0.02,
+          numberOfParticles: 80,
+          gravity: 0.3,
+          shouldLoop: false,
+          colors: const [
+            Colors.greenAccent,
+            Colors.blueAccent,
+            Colors.orangeAccent,
+            Colors.purpleAccent,
+            Colors.yellow,
+          ],
+        ),
+        Text(
+          widget.text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

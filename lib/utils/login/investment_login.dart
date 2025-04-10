@@ -5,6 +5,7 @@ import 'package:seb_hackaton/main.dart';
 import 'package:seb_hackaton/utils/databse/investment_database.dart';
 import 'package:seb_hackaton/utils/info/investment_info.dart';
 import 'package:uuid/uuid.dart';
+import 'package:seb_hackaton/utils/transaction_overlay.dart';
 
 class InvestmentLoginFlow extends StatefulWidget {
   const InvestmentLoginFlow({super.key});
@@ -67,16 +68,21 @@ class _InvestmentLoginFlowState extends State<InvestmentLoginFlow> {
       petAmount: 0,
       carAmount: 0,
     );
-    print("update login: initial amount: ${info.initialAmount}");
+
     await InvestmentDatabase.create(info);
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Investment Profile Saved!")));
+    if (!mounted) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => const MyApp()),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder:
+            (_) => CelebrationConfettiScreen(
+              text: "Profile Created!",
+              onComplete: () {
+                print("hello this is called");
+              },
+            ),
+      ),
     );
   }
 
@@ -248,6 +254,48 @@ class _InvestmentLoginFlowState extends State<InvestmentLoginFlow> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CelebrationConfettiScreen extends StatefulWidget {
+  final String text;
+  final VoidCallback onComplete;
+
+  const CelebrationConfettiScreen({
+    super.key,
+    required this.text,
+    required this.onComplete,
+  });
+
+  @override
+  State<CelebrationConfettiScreen> createState() =>
+      _CelebrationConfettiScreenState();
+}
+
+class _CelebrationConfettiScreenState extends State<CelebrationConfettiScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MyApp()),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black.withOpacity(0.85),
+      body: Center(
+        child: CelebrationConfetti(
+          text: widget.text,
+          duration: const Duration(seconds: 2),
+        ),
       ),
     );
   }
